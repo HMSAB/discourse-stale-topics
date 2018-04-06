@@ -1,3 +1,6 @@
 en:
   site_settings:
     stale_topics_enabled: "Enable stale topics managment"
+    stale_topics_remind_staff: "Enable to remind staff of stale topics that have gone unanswered"
+    stale_topics_remind_staff_duration: "Amount of time to wait before notifying staff. (eg: 10) DEFAULT: 24 hours"
+    stale_topics_remind_staff_interval_units: "Time span units (minutes, hours, days, months)"

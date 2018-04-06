@@ -2,3 +2,16 @@ plugins:
   stale_topics_enabled:
     default: true
     client: true
+  stale_topics_remind_staff:
+    default: true
+    client: true
+  stale_topics_remind_staff_duration: 0
+  stale_topics_remind_staff_interval_units:
+    client: true
+    type: enum
+    default: 'days'
+    choices:
+      - minutes
+      - hours
+      - days
+      - months
