@@ -2,7 +2,7 @@
 # about: Ensure stale topics are followed-up on
 # version: 0.1
 # authors: Jordan Seanor
-# url:
+# url: https://github.com/HMSAB/discourse-stale-topics.git
 require_relative 'app/jobs/stale_topics_staff_reminder.rb'
 
 enabled_site_setting :stale_topics_enabled
@@ -14,18 +14,22 @@ after_initialize do
   Topic.register_custom_field_type('staff_needs_reminder', :boolean)
   add_to_serializer(:topic_view, :custom_fields, false){object.topic.custom_fields}
 
-  # When a topic is created if the staff reminder site setting is enabled
+  # When a topic/post is created if the staff reminder site setting is enabled
   # create a sidekiq task to remind the users at the defined interval.
   #
   # Topic is updated with:
   # staff_reminder_job_id INT - Thintervale sidekiq task id so we can cancel later
   # staff_reminder_needs BOOLEAN - Denotes if the topic required staff response
-  DiscourseEvent.on(:topic_created) do |topic|
-    poster = User.find_by(id: topic.user_id)
-    if SiteSetting.stale_topics_remind_staff && SiteSetting.stale_topics_remind_staff_duration > 0 && !is_excluded_user(poster)
+  DiscourseEvent.on(:post_created) do |post, opts, user|
+    topic = Topic.find_by(id: post.topic_id)
+    if SiteSetting.stale_topics_remind_staff && SiteSetting.stale_topics_remind_staff_duration > 0 && !is_excluded_user(user)
       duration = SiteSetting.stale_topics_remind_staff_duration
       units = SiteSetting.stale_topics_remind_staff_interval_units.to_sym
       ::StaleTopic.handle_staff_reminder_job(topic, true, units, duration)
+    else
+      if topic.posts_count.to_i != 1
+        ::StaleTopic.handle_staff_reminder_job(topic, false, nil, 0)
+      end
     end
   end
 
@@ -37,7 +41,7 @@ after_initialize do
 
     # Create or cancel a scheduled staff reminder task
     # Additionally update the topic to clear out any
-    # custom fields
+    # custom fields. If the defined member replies, clear out the task.
     def self.handle_staff_reminder_job(topic, remind, units, duration)
       if remind
         topic.custom_fields["staff_reminder_count"] = topic.custom_fields["staff_reminder_count"].to_i + 1
@@ -48,10 +52,17 @@ after_initialize do
           topic.save!
         end
       else
-        staff_reminder_id = topic.custom_fields["staff_needs_reminder"]
-        Sidekiq::Status.cancel staff_reminder_id
+        staff_reminder_id = topic.custom_fields["staff_reminder_job_id"]
+        scheduled = Sidekiq::ScheduledSet.new
+        scheduled.each do |job|
+          if job.klass == 'StaleTopicsStaffReminder' && job.jid == staff_reminder_id
+            job.delete
+          end
+        end
         topic.custom_fields["staff_needs_reminder"] = false
         topic.custom_fields["staff_reminder_job_id"] = nil
+        topic.custom_fields["staff_reminder_count"] = 0
+        topic.save!
       end
     end
 
