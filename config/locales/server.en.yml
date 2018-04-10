@@ -4,3 +4,15 @@ en:
     stale_topics_remind_staff: "Enable to remind staff of stale topics that have gone unanswered"
     stale_topics_remind_staff_duration: "Amount of time to wait before notifying staff. (eg: 10) DEFAULT: 24 hours"
     stale_topics_remind_staff_interval_units: "Time span units (minutes, hours, days, months)"
+    stale_topics_retry_remind_staff_duration: "Amount of time to wait to send repeat messages to the defined group"
+    stale_topics_retry_remind_staff_interval_units: "Time span units (minutes, hours, days, months)"
+    stale_topics_remind_staff_group: "The group/user to send the messages to. DEFAULT: staff"
+  stale_topics_staff_reminder:
+    title: "Stale Topic Reminder"
+    subject_template: "A topic requires action"
+    text_body_template: |
+      Hello staff,
+      This [topic](%{base_url}%{url}) was created %{time_frame} and has not received a response.
+      This is the %{ordinalize_index} time a notification is being sent for this topic.
+
+      Please check this topic as soon as possible.

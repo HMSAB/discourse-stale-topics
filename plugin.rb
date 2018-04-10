@@ -10,6 +10,7 @@ enabled_site_setting :stale_topics_enabled
 after_initialize do
 
   Topic.register_custom_field_type('staff_reminder_job_id', :int)
+  Topic.register_custom_field_type('staff_reminder_count', :int)
   Topic.register_custom_field_type('staff_needs_reminder', :boolean)
   add_to_serializer(:topic_view, :custom_fields, false){object.topic.custom_fields}
 
@@ -22,7 +23,9 @@ after_initialize do
   DiscourseEvent.on(:topic_created) do |topic|
     poster = User.find_by(id: topic.user_id)
     if SiteSetting.stale_topics_remind_staff && SiteSetting.stale_topics_remind_staff_duration > 0 && !is_excluded_user(poster)
-      StaleTopic.handle_staff_reminder_job(topic, true)
+      duration = SiteSetting.stale_topics_remind_staff_duration
+      units = SiteSetting.stale_topics_remind_staff_interval_units.to_sym
+      ::StaleTopic.handle_staff_reminder_job(topic, true, units, duration)
     end
   end
 
@@ -30,17 +33,16 @@ after_initialize do
     user.admin || user.moderator
   end
 
-  class StaleTopic
+  class ::StaleTopic
 
     # Create or cancel a scheduled staff reminder task
     # Additionally update the topic to clear out any
     # custom fields
-    def self.handle_staff_reminder_job(topic, remind)
+    def self.handle_staff_reminder_job(topic, remind, units, duration)
       if remind
+        topic.custom_fields["staff_reminder_count"] = topic.custom_fields["staff_reminder_count"].to_i + 1
         topic.custom_fields["staff_needs_reminder"] = true
-        duration = SiteSetting.stale_topics_remind_staff_duration
-        units = SiteSetting.stale_topics_remind_staff_interval_units.to_sym
-        staff_reminder_id = StaleTopicsStaffReminder.perform_in(StaleTopic.create_reminder_datetime(units, duration), topic.id)
+        staff_reminder_id = StaleTopicsStaffReminder.perform_in(::StaleTopic.create_reminder_datetime(units, duration + 1), topic.id)
         if !staff_reminder_id.nil?
           topic.custom_fields["staff_reminder_job_id"] = staff_reminder_id
           topic.save!
