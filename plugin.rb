@@ -4,15 +4,11 @@
 # authors: Jordan Seanor
 # url: https://github.com/HMSAB/discourse-stale-topics.git
 require_relative 'app/jobs/stale_topics_staff_reminder.rb'
+require_relative 'app/jobs/stale_topics_client_reminder.rb'
 
 enabled_site_setting :stale_topics_enabled
 
 after_initialize do
-
-  Topic.register_custom_field_type('staff_reminder_job_id', :int)
-  Topic.register_custom_field_type('staff_reminder_count', :int)
-  Topic.register_custom_field_type('staff_needs_reminder', :boolean)
-  add_to_serializer(:topic_view, :custom_fields, false){object.topic.custom_fields}
 
   # When a topic/post is created if the staff reminder site setting is enabled
   # create a sidekiq task to remind the users at the defined interval.
@@ -29,12 +25,15 @@ after_initialize do
     else
       if topic.posts_count.to_i != 1
         ::StaleTopic.handle_staff_reminder_job(topic, false, nil, 0)
+        duration = SiteSetting.stale_topics_retry_remind_client_duration
+        units = SiteSetting.stale_topics_retry_remind_client_interval_units.to_sym
+        ::StaleTopic.handle_client_reminder_job(topic, post, true, units, duration)
       end
     end
   end
 
   def is_excluded_user(user)
-    user.admin || user.moderator
+    user.admin || user.moderator || (return false if user.id < 0) # don't wanna flag system posts
   end
 
   class ::StaleTopic
@@ -46,7 +45,7 @@ after_initialize do
       if remind
         topic.custom_fields["staff_reminder_count"] = topic.custom_fields["staff_reminder_count"].to_i + 1
         topic.custom_fields["staff_needs_reminder"] = true
-        staff_reminder_id = StaleTopicsStaffReminder.perform_in(::StaleTopic.create_reminder_datetime(units, duration + 1), topic.id)
+        staff_reminder_id = StaleTopicsStaffReminder.perform_in(::StaleTopic.create_reminder_datetime(units, duration), topic.id)
         if !staff_reminder_id.nil?
           topic.custom_fields["staff_reminder_job_id"] = staff_reminder_id
           topic.save!
@@ -63,6 +62,25 @@ after_initialize do
         topic.custom_fields["staff_reminder_job_id"] = nil
         topic.custom_fields["staff_reminder_count"] = 0
         topic.save!
+      end
+    end
+
+    def self.handle_client_reminder_job(topic, post, remind, units, duration)
+      if remind
+        topic.custom_fields["client_reminder_count"] = topic.custom_fields["client_reminder_count"].to_i + 1
+        if post.user_id > 0
+          topic.custom_fields["recent_staff_post"] = post.id
+        end
+        if topic.custom_fields["client_reminder_count"].to_i <= SiteSetting.stale_topics_max_client_replies.to_i
+          client_reminder_id = StaleTopicsClientReminder.perform_in(::StaleTopic.create_reminder_datetime(units, duration), topic.id)
+          if !client_reminder_id.nil?
+            topic.custom_fields["client_reminder_job_id"] = client_reminder_id
+            topic.save!
+          end
+        end
+        #start timer actions
+      else
+        #clear actions
       end
     end
 

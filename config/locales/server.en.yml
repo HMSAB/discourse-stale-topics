@@ -16,3 +16,11 @@ en:
       This is the %{ordinalize_index} time a notification is being sent for this topic.
 
       Please check this topic as soon as possible.
+  stale_topics_client_reminder:
+    title: "Stale Topic Reminder"
+    subject_template: "A staff member has responded to your request"
+    text_body_template: |
+      Hello @%{username},
+      A staff member responded to your topic %{time_frame} however we have
+      not seen any follow-up on this request. If you require further assistance
+      please respond as soon as possible. 

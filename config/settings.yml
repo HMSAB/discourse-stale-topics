@@ -4,10 +4,8 @@ plugins:
     client: true
   stale_topics_remind_staff:
     default: true
-    client: true
   stale_topics_remind_staff_duration: 0
   stale_topics_remind_staff_interval_units:
-    client: true
     type: enum
     default: 'days'
     choices:
@@ -17,7 +15,6 @@ plugins:
       - months
   stale_topics_retry_remind_staff_duration: 0
   stale_topics_retry_remind_staff_interval_units:
-    client: true
     type: enum
     default: 'days'
     choices:
@@ -26,3 +23,15 @@ plugins:
       - days
       - months
   stale_topics_remind_staff_group: "staff"
+  stale_topics_max_client_replies:
+    default: 2
+  stale_topics_retry_remind_client_duration: 0
+  stale_topics_retry_remind_client_interval_units:
+    client: true
+    type: enum
+    default: 'days'
+    choices:
+      - minutes
+      - hours
+      - days
+      - months
