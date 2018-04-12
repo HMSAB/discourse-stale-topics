@@ -5,8 +5,12 @@ en:
     stale_topics_remind_staff_duration: "Amount of time to wait before notifying staff. (eg: 10) DEFAULT: 24 hours"
     stale_topics_remind_staff_interval_units: "Time span units (minutes, hours, days, months)"
     stale_topics_retry_remind_staff_duration: "Amount of time to wait to send repeat messages to the defined group"
-    stale_topics_retry_remind_staff_interval_units: "Time span units (minutes, hours, days, months)"
+    stale_topics_retry_remind_staff_interval_units: "Time span units (minutes, hours, days, months) "
     stale_topics_remind_staff_group: "The group/user to send the messages to. DEFAULT: staff"
+    stale_topics_max_client_replies: "Set the maximum number of private messages to send the users as a reminder"
+    stale_topics_retry_remind_client_duration: "Set the the amount of time to wait to retrigger a reminder"
+    stale_topics_retry_remind_client_interval_units: "Time span units (minutes, hours, days, months) for the client reminder"
+    stale_topics_client_staff_whisper_reminder_enabled: "Enable to add a whisper when a client is reminded of a topic"
   stale_topics_staff_reminder:
     title: "Stale Topic Reminder"
     subject_template: "A topic requires action"
@@ -23,4 +27,11 @@ en:
       Hello @%{username},
       A staff member responded to your topic %{time_frame} however we have
       not seen any follow-up on this request. If you require further assistance
-      please respond as soon as possible. 
+      please respond as soon as possible.
+  stale_topics_client_staff_whisper_reminder:
+    title: "Stale Topic Reminder"
+    subject_template: "The client has been notified"
+    text_body_template: |
+      Hello @%{group_name},
+      The system sent %{username} a message asking for an update. The customer
+      has not responded sin %{time_frame}.

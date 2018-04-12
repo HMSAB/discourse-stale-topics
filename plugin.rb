@@ -78,7 +78,6 @@ after_initialize do
             if job.args[0].is_a?(Integer)
               if job.klass == 'StaleTopicsClientReminder' && job.args[0].to_i == topic.id
                 job.delete
-                topic.custom_fields["client_reminder_count"] = topic.custom_fields["client_reminder_count"].to_i - 1
               end
             end
           end
