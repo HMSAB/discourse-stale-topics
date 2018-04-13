@@ -25,7 +25,7 @@ en:
     subject_template: "A staff member has responded to your request"
     text_body_template: |
       Hello @%{username},
-      A staff member responded to your topic %{time_frame} however we have
+      A staff member responded to your [topic](%{base_url}%{url}) %{time_frame} however we have
       not seen any follow-up on this request. If you require further assistance
       please respond as soon as possible.
   stale_topics_client_staff_whisper_reminder:
@@ -34,4 +34,4 @@ en:
     text_body_template: |
       Hello @%{group_name},
       The system sent %{username} a message asking for an update. The customer
-      has not responded sin %{time_frame}.
+      has not responded since %{time_frame}.

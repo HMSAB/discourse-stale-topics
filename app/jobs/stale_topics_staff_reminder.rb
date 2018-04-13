@@ -27,7 +27,7 @@ class StaleTopicsStaffReminder
     if topic.custom_fields["staff_needs_reminder"]
       duration = SiteSetting.stale_topics_retry_remind_staff_duration
       units = SiteSetting.stale_topics_retry_remind_staff_interval_units.to_sym
-      ::StaleTopic.handle_staff_reminder_job(topic, true, units, duration)
+      ::StaleTopic.handle_staff_reminder_job(topic, ::StaleTopic::ReminderTask.reminder[:create_reminder], units, duration)
     end
   end
 end
