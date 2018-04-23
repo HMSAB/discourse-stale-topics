@@ -9,6 +9,7 @@ class StaleTopicsClientReminder
 
   def perform(topic_id)
     topic = Topic.find_by(id: topic_id)
+    if topic.custom_fields["accepted_answer_post_id"].nil?
     staff_post = Post.find_by(id: topic.custom_fields["recent_staff_post"].to_i)
     op = User.find_by(id: topic.user_id.to_i)
     time_difference = distance_of_time_in_words_to_now(staff_post.created_at, scope: 'datetime.distance_in_words_verbose')
@@ -44,5 +45,6 @@ class StaleTopicsClientReminder
       units = SiteSetting.stale_topics_retry_remind_client_interval_units.to_sym
       ::StaleTopic.handle_client_reminder_job(topic, staff_post, ::StaleTopic::ReminderTask.reminder[:create_reminder], units, duration)
     end
+  end
   end
 end
