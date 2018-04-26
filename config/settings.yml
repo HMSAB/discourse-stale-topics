@@ -37,3 +37,6 @@ plugins:
       - months
   stale_topics_client_staff_whisper_reminder_enabled:
     default: true
+  stale_topics_show_sidekiq:
+    default: true
+    client: true
