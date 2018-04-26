@@ -13,11 +13,13 @@ en:
     stale_topics_client_staff_whisper_reminder_enabled: "Enable to add a whisper when a client is reminded of a topic"
   stale_topics_staff_reminder:
     title: "Stale Topic Reminder"
-    subject_template: "A topic requires action"
+    subject_template: "%{topic_title} - Requires Action"
     text_body_template: |
       Hello staff,
-      This [topic](%{base_url}%{url}) was created %{time_frame} and has not received a response.
+      [%{topic_title}](%{base_url}%{url}) was created %{time_frame} and has not received a response.
       This is the %{ordinalize_index} time a notification is being sent for this topic.
+
+      <br>
 
       Please check this topic as soon as possible.
   stale_topics_client_reminder:

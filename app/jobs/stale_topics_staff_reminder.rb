@@ -18,8 +18,8 @@ class StaleTopicsStaffReminder
       target_group_names: [SiteSetting.stale_topics_remind_staff_group.to_s],
       archetype: Archetype.private_message,
       subtype: TopicSubtype.system_message,
-      title: I18n.t("stale_topics_staff_reminder.subject_template"),
-      raw:   I18n.t("stale_topics_staff_reminder.text_body_template", base_url: Discourse.base_url, url: url, time_frame: time_difference, ordinalize_index: ordinalized_index)
+      title: I18n.t("stale_topics_staff_reminder.subject_template",topic_title: topic.title),
+      raw:   I18n.t("stale_topics_staff_reminder.text_body_template", base_url: Discourse.base_url, url: url, time_frame: time_difference, ordinalize_index: ordinalized_index, topic_title: topic.title)
     )
 
 
