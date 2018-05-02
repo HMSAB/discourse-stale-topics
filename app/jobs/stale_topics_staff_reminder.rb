@@ -11,6 +11,9 @@ class StaleTopicsStaffReminder
     topic = Topic.find_by(id: topic_id)
     if topic.custom_fields["accepted_answer_post_id"].nil?
     time_difference = distance_of_time_in_words_to_now(topic.last_posted_at, scope: 'datetime.distance_in_words_verbose')
+    if topic.custom_fields["staff_reminder_count"].to_i == 0
+      topic.custom_fields["staff_reminder_count"] = 1
+    end
     ordinalized_index = topic.custom_fields["staff_reminder_count"].to_i.ordinalize
     url = "/t/#{topic_id}"
     post = PostCreator.create!(
