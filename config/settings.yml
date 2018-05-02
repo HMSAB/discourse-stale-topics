@@ -40,3 +40,5 @@ plugins:
   stale_topics_show_sidekiq:
     default: true
     client: true
+  stale_topics_silence_on_whisper:
+    default: true

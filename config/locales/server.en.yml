@@ -12,6 +12,7 @@ en:
     stale_topics_retry_remind_client_interval_units: "Time span units (minutes, hours, days, months) for the client reminder"
     stale_topics_client_staff_whisper_reminder_enabled: "Enable to add a whisper when a client is reminded of a topic"
     stale_topics_show_sidekiq: "Enable to add a quick button to sidekiq scheduled tasks"
+    stale_topics_silence_on_whipser: "Silence staff reminders when a whisper is added to a thread."
   stale_topics_staff_reminder:
     title: "Stale Topic Reminder"
     subject_template: "%{topic_title} - Requires Action"
