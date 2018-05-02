@@ -18,7 +18,7 @@ after_initialize do
   # staff_reminder_needs BOOLEAN - Denotes if the topic required staff response
   DiscourseEvent.on(:post_created) do |post, opts, user|
     if SiteSetting.stale_topics_enabled
-      if SiteSetting.stale_topics_silence_on_whipser && post.whisper?
+      if SiteSetting.stale_topics_silence_on_whisper && post.whisper?
         ::StaleTopic.delete_duplicate_jobs(post.topic_id)
       else
         topic = Topic.find_by(id: post.topic_id)
@@ -54,15 +54,9 @@ after_initialize do
         topic.custom_fields["staff_reminder_count"] = topic.custom_fields["staff_reminder_count"].to_i + 1
         topic.custom_fields["staff_needs_reminder"] = true
         staff_reminder_id = StaleTopicsStaffReminder.perform_in(::StaleTopic.create_reminder_datetime(units, duration), topic.id)
-        if !staff_reminder_id.nil?
-          topic.custom_fields["staff_reminder_job_id"] = staff_reminder_id
-          topic.save!
-        end
       else
-        staff_reminder_id = topic.custom_fields["staff_reminder_job_id"]
         ::StaleTopic.delete_duplicate_jobs(topic.id)
         topic.custom_fields["staff_needs_reminder"] = false
-        topic.custom_fields["staff_reminder_job_id"] = nil
         topic.custom_fields["staff_reminder_count"] = 0
         topic.save!
       end
@@ -76,14 +70,6 @@ after_initialize do
           topic.custom_fields["recent_staff_post"] = post.id
         end
         if topic.custom_fields["client_reminder_count"].to_i <= SiteSetting.stale_topics_max_client_replies.to_i
-          scheduled = Sidekiq::ScheduledSet.new
-          scheduled.each do |job|
-            if job.args[0].is_a?(Integer)
-              if job.klass == 'StaleTopicsClientReminder' && job.args[0].to_i == topic.id
-                job.delete
-              end
-            end
-          end
           client_reminder_id = StaleTopicsClientReminder.perform_in(::StaleTopic.create_reminder_datetime(units, duration), topic.id)
           if !client_reminder_id.nil?
             topic.custom_fields["client_reminder_job_id"] = client_reminder_id
