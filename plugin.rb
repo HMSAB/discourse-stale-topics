@@ -46,6 +46,7 @@ after_initialize do
     # custom fields. If the defined member replies, clear out the task.
     def self.handle_staff_reminder_job(topic, remind, units, duration)
       if remind
+        ::StaleTopic.delete_duplicate_jobs(topic.id)
         topic.custom_fields["staff_reminder_count"] = topic.custom_fields["staff_reminder_count"].to_i + 1
         topic.custom_fields["staff_needs_reminder"] = true
         staff_reminder_id = StaleTopicsStaffReminder.perform_in(::StaleTopic.create_reminder_datetime(units, duration), topic.id)
@@ -55,12 +56,7 @@ after_initialize do
         end
       else
         staff_reminder_id = topic.custom_fields["staff_reminder_job_id"]
-        scheduled = Sidekiq::ScheduledSet.new
-        scheduled.each do |job|
-          if job.klass == 'StaleTopicsStaffReminder' && job.jid == staff_reminder_id
-            job.delete
-          end
-        end
+        ::StaleTopic.delete_duplicate_jobs(topic.id)
         topic.custom_fields["staff_needs_reminder"] = false
         topic.custom_fields["staff_reminder_job_id"] = nil
         topic.custom_fields["staff_reminder_count"] = 0
@@ -70,6 +66,7 @@ after_initialize do
 
     def self.handle_client_reminder_job(topic, post, remind, units, duration)
       if remind
+        ::StaleTopic.delete_duplicate_jobs(topic.id)
         topic.custom_fields["client_reminder_count"] = topic.custom_fields["client_reminder_count"].to_i + 1
         if post.user_id > 0
           topic.custom_fields["recent_staff_post"] = post.id
@@ -91,15 +88,21 @@ after_initialize do
         end
       else
         client_reminder_id = topic.custom_fields["client_reminder_job_id"]
-        scheduled = Sidekiq::ScheduledSet.new
-        scheduled.each do |job|
-          if job.klass == 'StaleTopicsClientReminder' && job.jid == client_reminder_id
-            job.delete
-          end
-        end
+        ::StaleTopic.delete_duplicate_jobs(topic.id)
         topic.custom_fields["client_reminder_job_id"] = nil
         topic.custom_fields["client_reminder_count"] = 0
         topic.save!
+      end
+    end
+
+    def self.delete_duplicate_jobs(topic_id)
+      scheduled = Sidekiq::ScheduledSet.new
+      scheduled.each do |job|
+        if job.klass == 'StaleTopicsClientReminder' || job.klass == 'StaleTopicsStaffReminder'
+          if job.args[0].to_i == topic_id
+            job.delete
+          end
+        end
       end
     end
 
