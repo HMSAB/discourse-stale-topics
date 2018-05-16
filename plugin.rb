@@ -22,20 +22,24 @@ after_initialize do
         ::StaleTopic.delete_duplicate_jobs(post.topic_id)
       else
         topic = Topic.find_by(id: post.topic_id)
-        if SiteSetting.stale_topics_remind_staff && SiteSetting.stale_topics_remind_staff_duration > 0 && !is_excluded_user(user)
-          ::StaleTopic.handle_client_reminder_job(topic, post, ::StaleTopic::ReminderTask.reminder[:remove_reminder], nil, 0)
-          duration = SiteSetting.stale_topics_remind_staff_duration
-          units = SiteSetting.stale_topics_remind_staff_interval_units.to_sym
-          ::StaleTopic.handle_staff_reminder_job(topic, ::StaleTopic::ReminderTask.reminder[:create_reminder], units, duration)
-        else
-          if topic.posts_count.to_i != 1
-            ::StaleTopic.handle_staff_reminder_job(topic, ::StaleTopic::ReminderTask.reminder[:remove_reminder], nil, 0)
-            duration = SiteSetting.stale_topics_retry_remind_client_duration
-            units = SiteSetting.stale_topics_retry_remind_client_interval_units.to_sym
-            ::StaleTopic.handle_client_reminder_job(topic, post, ::StaleTopic::ReminderTask.reminder[:create_reminder], units, duration)
+          if topic.archetype != 'private_message'
+            if !SiteSetting.stale_topics_ignored_categories.include? topic.category.name
+              if SiteSetting.stale_topics_remind_staff && SiteSetting.stale_topics_remind_staff_duration > 0 && !is_excluded_user(user)
+                ::StaleTopic.handle_client_reminder_job(topic, post, ::StaleTopic::ReminderTask.reminder[:remove_reminder], nil, 0)
+                duration = SiteSetting.stale_topics_remind_staff_duration
+                units = SiteSetting.stale_topics_remind_staff_interval_units.to_sym
+                ::StaleTopic.handle_staff_reminder_job(topic, ::StaleTopic::ReminderTask.reminder[:create_reminder], units, duration)
+              else
+                if topic.posts_count.to_i != 1
+                  ::StaleTopic.handle_staff_reminder_job(topic, ::StaleTopic::ReminderTask.reminder[:remove_reminder], nil, 0)
+                  duration = SiteSetting.stale_topics_retry_remind_client_duration
+                  units = SiteSetting.stale_topics_retry_remind_client_interval_units.to_sym
+                  ::StaleTopic.handle_client_reminder_job(topic, post, ::StaleTopic::ReminderTask.reminder[:create_reminder], units, duration)
+                end
+              end
+            end
           end
         end
-      end
     end
   end
 
