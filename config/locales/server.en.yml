@@ -15,11 +15,13 @@ en:
     stale_topics_silence_on_whipser: "Silence staff reminders when a whisper is added to a thread."
   stale_topics_staff_reminder:
     title: "Stale Topic Reminder"
-    subject_template: "%{topic_title} - Requires Action"
+    subject_template: "%{topic_title} - Requires Action %{additional_information}"
     text_body_template: |
       Hello staff,
       [%{topic_title}](%{base_url}%{url}) was created %{time_frame} and has not received a response.
       This is the %{ordinalize_index} time a notification is being sent for this topic.
+
+      %{additional_information}
 
       <br>
 

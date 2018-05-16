@@ -14,18 +14,40 @@ class StaleTopicsStaffReminder
     if topic.custom_fields["staff_reminder_count"].to_i == 0
       topic.custom_fields["staff_reminder_count"] = 1
     end
+
+    @additional_information = ""
+    @owner = nil
+    if !topic.custom_fields["assigned_to_id"].nil?
+      @owner = User.find_by(id: topic.custom_fields["assigned_to_id"].to_i).username
+      @additional_information = "Assigned To: " + @owner
+    end
+
+    if @owner.nil?
+      @owner = ""
+    end
+
     ordinalized_index = topic.custom_fields["staff_reminder_count"].to_i.ordinalize
     url = "/t/#{topic_id}"
-    post = PostCreator.create!(
-      Discourse.system_user,
-      target_group_names: [SiteSetting.stale_topics_remind_staff_group.to_s],
-      archetype: Archetype.private_message,
-      subtype: TopicSubtype.system_message,
-      title: I18n.t("stale_topics_staff_reminder.subject_template",topic_title: topic.title),
-      raw:   I18n.t("stale_topics_staff_reminder.text_body_template", base_url: Discourse.base_url, url: url, time_frame: time_difference, ordinalize_index: ordinalized_index, topic_title: topic.title)
-    )
 
-
+    if SiteSetting.stale_topics_notify_only_owner
+      post = PostCreator.create!(
+        Discourse.system_user,
+        target_usernames: @owner,
+        archetype: Archetype.private_message,
+        subtype: TopicSubtype.system_message,
+        title: I18n.t("stale_topics_staff_reminder.subject_template",topic_title: topic.title, additional_information: @owner),
+        raw:   I18n.t("stale_topics_staff_reminder.text_body_template", base_url: Discourse.base_url, url: url, time_frame: time_difference, ordinalize_index: ordinalized_index, topic_title: topic.title, additional_information: @additional_information)
+      )
+    else
+      post = PostCreator.create!(
+        Discourse.system_user,
+        target_group_names: [SiteSetting.stale_topics_remind_staff_group.to_s],
+        archetype: Archetype.private_message,
+        subtype: TopicSubtype.system_message,
+        title: I18n.t("stale_topics_staff_reminder.subject_template",topic_title: topic.title, additional_information: @owner),
+        raw:   I18n.t("stale_topics_staff_reminder.text_body_template", base_url: Discourse.base_url, url: url, time_frame: time_difference, ordinalize_index: ordinalized_index, topic_title: topic.title, additional_information: @additional_information)
+      )
+    end
     # If the reminder flag is still true, reinstantiate another worker instance.
     # Additionally update the worker to the retry interval instead of the default
     if topic.custom_fields["staff_needs_reminder"] && topic.custom_fields["accepted_answer_post_id"].nil?

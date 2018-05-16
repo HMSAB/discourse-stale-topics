@@ -46,3 +46,5 @@ plugins:
     client: true
     type: list
     default: staff
+  stale_topics_notify_only_owner:
+    default: false
